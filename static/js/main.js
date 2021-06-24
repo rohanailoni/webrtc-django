@@ -6,7 +6,8 @@ var btnjoin=document.querySelector('#btn-join')
 
 var username;
 
-
+var mappeer={};
+var reciver_ch
 function websocketonmessage(e){
 
 
@@ -16,10 +17,21 @@ function websocketonmessage(e){
         if(username === peerusername){
 
         }
-        var reciver_ch=msg['message']['reciver_channel_name'];
+        reciver_ch=msg['message']['reciver_channel_name'];
 
         if(action === 'new-peer'){
-            createoffer(peerusername,reciver_channel_name)
+            createoffer(peerusername,reciver_ch)
+        }
+        if(action ==="new-offer"){
+            var offer =msg['message']['sdp']
+            createanswer(offer,peerusername,reciver_ch)
+        }
+        if(action === "new-answer"){
+            var answer=msg['message']['sdp'];
+            var peer=mappeer[peerusername][0];
+            peer.setRemoteDescription(answer);
+            return;
+
         }
 
 
@@ -71,15 +83,46 @@ btnjoin.addEventListener('click',()=>{
 var localstram= new MediaStream();
 
 const constrains={
-            'video':false,
+            'video':true,
             'audio':false,
 
 };
 const localvideo=document.querySelector('#local-video');
+
+const btn_audio=document.querySelector('#btn-toogle-audio');
+
+const btn_vid=document.querySelector('#btn-toogle-vid');
 var localStream;
 function gotLocalMediaStream(mediaStream){
             localStream = mediaStream;
             localvideo.srcObject = mediaStream;
+
+            var audiotracks=mediaStream.getAudioTracks();
+            var videotracks=mediaStream.getVideoTracks();
+            audiotracks[0].enabled=true;
+            videotracks[0].enabled=true;
+            btn_audio.addEventListener('onclick',()=>{
+                audiotracks[0].enabled=!audiotracks[0].enabled;
+                if(audiotracks[0].enabled){
+                    btn_audio.innerHTML='AUDIO mute';
+                    return ;
+                }
+                else{
+                    btn_audio.innerHTML='audio  unmute';
+                }
+            });
+            btn_vid.addEventListener('onclick',()=>{
+                videotracks[0].enabled=!videotracks[0].enabled;
+                if(videotracks[0].enabled){
+                    btn_vid.innerHTML='video off';
+                    return ;
+                }
+                else{
+                    btn_vid.innerHTML='video  on';
+                }
+            })
+
+
             }
 function handleLocalMediaStreamError(error) {
             console.log("error accesing media devices",error)
@@ -119,7 +162,7 @@ function createoffer(peerusername,reciver_channel_name){
     dc.addEventListener('open',()=>{
         console.log("rtc connection opened");
     });
-
+    mappeer[peerusername]=[peer,dc];
     dc.addEventListener('message',(event)=>{
         var message=event.data;
 
@@ -128,7 +171,83 @@ function createoffer(peerusername,reciver_channel_name){
         messsage_list.appendChild(li);
     });
     var remote_video = createVideo(peerusername);
-    setontrack(peer,peerusername)
+    setontrack(peer,remote_video)
+
+    peer.addEventListener('iceconnectionstatechange',()=>{
+        var iceconnectionstate=peer.iceConnectionState;
+        if(iceconnectionstate === "failed" || iceconnectionstate === "disconnected" || iceconnectionstate === "closed"){
+            delete mappeer[peerusername];
+            if(iceconnectionstate !== "closed"){
+                peer.close();
+            }
+             (remote_video);
+        }
+
+    });
+    peer.addEventListener('icecandidate',(event)=> {
+        console.log(event.candidate)
+        if(event.candidate !== null){
+            //console.log("new ice condiate:-",JSON.stringify(peer.localDescription));
+            return;
+
+        }
+        signal('new-offer',{sdp:peer.localDescription,'reciver_channel_name':reciver_channel_name})
+
+
+    });
+    peer.createOffer().then(o=>peer.setLocalDescription(o)).then(()=>console.log("local description sucessfully"))
+}
+function createanswer(offer,peerusername,reciver_ch) {
+    var peer =new RTCPeerConnection(null);
+
+    addlocaltracks(peer);
+
+    peer.addEventListener('datachannel',(e)=>{
+        peer.dc=e.channel;
+        peer.dc.addEventListener('open',()=>{
+            console.log("connection opened");
+        });
+        peer.dc.addEventListener('message',()=>{
+
+        });
+        mappeer[peerusername]=[peer,peer.dc];
+    })
+
+
+
+    var remote_video = createVideo(peerusername);
+    setontrack(peer,remote_video)
+
+    peer.addEventListener('iceconnectionstatechange',()=>{
+        var iceconnectionstate=peer.iceConnectionState;
+        if(iceconnectionstate === "failed" || iceconnectionstate === "disconnected" || iceconnectionstate === "closed"){
+            delete mappeer[peerusername];
+            if(iceconnectionstate !== "closed"){
+                peer.close();
+            }
+            remvid(remote_video);
+        }
+
+    });
+    peer.addEventListener('icecandidate',(event)=> {
+        if(event.candidate){
+            console.log("event of ice condiate ",event);
+            console.log("new ice condiate:-",JSON.stringify(peer.localDescription));
+            return;
+
+        }
+        signal('new-answer',{sdp:peer.localDescription,'reciver_channel_name':reciver_ch})
+
+
+    });
+    peer.setRemoteDescription(offer).then(()=> {
+        console.log("remote description set sucessfully for %s", peerusername);
+        return peer.createAnswer();
+    }).then(a=>{
+        console.log("answer created");
+        peer.setLocalDescription(a)
+    });
+
 }
 
 function addlocaltracks(peer){
@@ -157,11 +276,22 @@ function createVideo(peerusername) {
 
 }
 function setontrack(peer,remotevideo){
-    var remotestream=new MediaStream();
+    var remoteStream=new MediaStream();
 
-    remotevideo.srcObject=remotestream;
+    remotevideo.srcObject=remoteStream;
     peer.addEventListener('track',async (event)=>{
 
+            remoteStream.addTrack(event.track,remoteStream)
+
     })
+
+}
+
+function remvid(video){
+
+    var videowrapper=video.parentNode
+    videowrapper.parentNode.removeChild(videowrapper);
+
+
 
 }

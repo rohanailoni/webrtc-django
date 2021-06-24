@@ -21,18 +21,37 @@ class chat_fun(AsyncWebsocketConsumer):
 
         receive_data=json.loads(text_data)
         message=receive_data['message']
-        receive_data['message']['reciver_channel_name']=self.channel_name;
+        action=receive_data['action']
+        if (action=="new-offer") or (action=="new-answer"):
+            reciver_channel_name= receive_data['message']['reciver_channel_name']
+            receive_data['message']['reciver_channel_name']=self.channel_name
+            await self.channel_layer.send(
+                reciver_channel_name
+                 ,
+                {
+                    'type': 'send_sdp',
+                    'receive_data': receive_data,
+                }
+
+            )
+            return
+
+        receive_data['message']['reciver_channel_name']=self.channel_name
+
+
 
 
         await self.channel_layer.group_send(
             self.group_name,
             {
-                'type':'send_sdp',
+                'type':'send.sdp',
                 'receive_data':receive_data,
             }
 
         )
     async  def send_sdp(self,event):
-        message=event['receive_data'];
+        message=event['receive_data']
         await self.send(text_data=json.dumps(message))
 
+class Audio(AsyncWebsocketConsumer):
+    pass
