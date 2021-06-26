@@ -92,7 +92,7 @@ const localvideo=document.querySelector('#local-video');
 const btn_audio=document.querySelector('#btn-toogle-audio');
 
 const btn_vid=document.querySelector('#btn-toogle-vid');
-var localStream;
+
 function gotLocalMediaStream(mediaStream){
             localStream = mediaStream;
             localvideo.srcObject = mediaStream;

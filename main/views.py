@@ -18,3 +18,13 @@ def room1(request,room_name):
 def audio(request):
     return render(request,'audio.html')
 
+
+def login_render(request):
+    return render(request,'login.html')
+
+def login_auth(request):
+    username=request.POST.get('username')
+    password=request.POST.get('password')
+
+
+    return HttpResponseRedirect('/')

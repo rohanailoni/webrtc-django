@@ -20,4 +20,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('chat/', include('main.urls')),
     path('',audio),
+    path('login/',login_render),
+    path('auth/',login_auth),
 ]

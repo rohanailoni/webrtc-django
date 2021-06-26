@@ -4,14 +4,59 @@
 <head>
     <meta charset="UTF-8">
     <title>DJANGO Audio CALL</title>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 </head>
 <body>
 <div>
     <h3 class="label-username">Username</h3>
     <input type="text" placeholder="enter the roomname to enter" style="height: 30px;width: 250px" id="username"/>
     <button id="btn-submit">Join Room</button>
+    <div class="main-grid-container">
+    <div id="video-container">
+        <div>
+            <video id="local-video" style="float: left;" autoplay playsinline></video>
+        </div>
+        <div>
+            <video id="local-video 1" style="float: left;" autoplay playsinline></video>
+        </div>
+        <button id="btn-toogle-audio">Audio Mute</button>
+        <button id="btn-toogle-vid">video off</button>
+
+    </div>
+    <div id="chat">
+        <h3>
+            CHAT
+        </h3>
+        <div id="messages">
+            <ul id="message-list">
+
+            </ul>
+        </div>
+        <div><input id="msg" type="text"/><button id="btn-send-msg">send message</button></div>
+        <button id="btn-share-screen">Share screen</button>
+    </div>
+
 </div>
+</div>
+<style>
+    #video-container{
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        background-color: black;
+
+    }
+    .main-grid-container{
+        display: grid;
+        grid-template-columns: 60% 20%;
+
+    }
+    video{
+        border-radius: 25%;
+        border-color: black;
+    }
+
+</style>
 <script src="{% static 'js/chat.js' %}"></script>
 </body>
 

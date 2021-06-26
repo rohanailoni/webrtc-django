@@ -14,7 +14,7 @@ application = ProtocolTypeRouter({
         URLRouter(
             [
                 path(r'chat/', chat_fun.as_asgi()),
-                path(r'audio/',Audio),
+                path(r'',Audio.as_asgi()),
 
             ]
         )
