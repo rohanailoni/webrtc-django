@@ -49,7 +49,7 @@ btnjoin.addEventListener('click',()=>{
         if(local.protocol ==='https:'){
             wsstart='wss://';
         }
-        var endpoint=wsstart+local.host +"" ;
+        var endpoint=wsstart+local.host +"/room/" ;
 
         websocket=new WebSocket(endpoint);
 
